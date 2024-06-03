@@ -16,36 +16,26 @@ export class UserController {
 
     @Get()
     async list() {
-        return {users:[]};
+        return this.userService.list();
     }
     
     @Get(':id')
     async show(@Param('id', ParseIntPipe) id: number) {
-        return {users:{}, id};
+        return this.userService.show(id);
     }
 
     @Put(':id')
-    async update(@Body() {email, name, password}: UpdatePutUserDTO, @Param('id', ParseIntPipe) id: number){
-        return {
-            method: 'put',
-            email, name, password,
-            id
-        }
+    async update(@Body() data: UpdatePutUserDTO, @Param('id', ParseIntPipe) id: number){
+        return this.userService.update(id, data);
     }
     
     @Patch(':id')
-    async updateParcial(@Body() {email, name, password}: UpdatePatchUserDTO, @Param('id', ParseIntPipe) id: number){
-        return {
-            method: 'patch',
-            email, name, password,
-            id
-        }
+    async updateParcial(@Body() data: UpdatePatchUserDTO, @Param('id', ParseIntPipe) id: number){
+        return this.userService.updatePartial(id, data);
     }
 
     @Delete(':id')
     async delete(@Param('id', ParseIntPipe) id: number) {
-        return {
-            id
-        }
+        return this.userService.delete(id);
     }
 }
