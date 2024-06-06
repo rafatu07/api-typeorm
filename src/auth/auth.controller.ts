@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Headers, UseGuards, Req } from "@nestjs/common";
+import { Body, Controller, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException, UploadedFiles } from "@nestjs/common";
 import { AuthForgetDTO } from "src/auth/dto/auth-forget.dto";
 import { AuthResetDTO } from "src/auth/dto/auth-reset.dto";
 import { UserService } from "src/user/user.service";
@@ -7,9 +7,13 @@ import { AuthLoginDTO } from "./dto/auth-login.dto";
 import { AuthRegisterDTO } from "./dto/auth-register.dto";
 import { AuthGuard } from "./guards/auth.guard";
 import { User } from "./decorators/user.deorator";
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { writeFile } from "fs/promises";
+import path, { join } from "path";
 
 @Controller('auth')
 export class AuthController {
+    [x: string]: any;
 
     constructor(
         private readonly userService: UserService,
@@ -38,7 +42,44 @@ export class AuthController {
     
     @UseGuards(AuthGuard)
     @Post('me')
-    async me(@User('id') user){
+    async me(@User() user){
         return {user};
+    }
+
+    @UseInterceptors(FileInterceptor('file'))
+    @UseGuards(AuthGuard)
+    @Post('photo')
+    async uploadPhoto(@User() user, @UploadedFile() photo: Express.Multer.File){
+        
+        const path = join(__dirname, '..', '..', 'storage', 'photos', `photo-${user.id}.png`);
+        
+        try {
+            await this.fileService.upload(photo, path);
+        } catch (e) {
+            throw new BadRequestException(e)
+        }
+        return {sucess:true};
+    }
+
+    @UseInterceptors(FilesInterceptor('files'))
+    @UseGuards(AuthGuard)
+    @Post('files')
+    async uploadFiles(@User() user, @UploadedFiles() files: Express.Multer.File[]){
+
+        return files;
+    }
+    
+    @UseInterceptors(FileFieldsInterceptor([{
+        name: 'photo',
+        maxCount: 1
+    }, {
+        name: 'documents',
+        maxCount: 10
+    }]))
+    @UseGuards(AuthGuard)
+    @Post('files-fields')
+    async uploadFilesFields(@User() user, @UploadedFiles() files: {photo: Express.Multer.File, documents: Express.Multer.File[]}){
+
+        return files;
     }
 }

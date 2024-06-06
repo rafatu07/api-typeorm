@@ -69,7 +69,7 @@ export class UserService {
         }
         if (password) {
             const salt = await bcrypt.genSalt();
-            data.password = await bcrypt.hash(password, salt)
+            data.password = await bcrypt.hash(password, salt);
         }
         if (role) {
             data.role = role;
